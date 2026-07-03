@@ -1,4 +1,4 @@
-"""Parser harness: baseline and improved arms via Docling."""
+"""Parser harness: baseline, ocr, and ocr_vlm arms via Docling."""
 
 import json
 import os
@@ -15,21 +15,24 @@ PROCUREMENT_PROMPT = (
     "locations, procurement indicators, or council decisions visible."
 )
 
-VALID_ARMS = ("baseline", "improved")
+VALID_ARMS = ("baseline", "ocr", "ocr_vlm")
 
 
 def _build_converter(arm: str) -> DocumentConverter:
     if arm not in VALID_ARMS:
         raise ValueError(f"arm must be one of {VALID_ARMS}, got '{arm}'")
 
+    use_ocr = arm in ("ocr", "ocr_vlm")
+    use_vlm = arm == "ocr_vlm"
+
     pdf_opts = PdfPipelineOptions(
-        do_ocr=False,
-        do_picture_description=arm == "improved",
-        generate_picture_images=arm == "improved",
-        enable_remote_services=arm == "improved",
+        do_ocr=use_ocr,
+        do_picture_description=use_vlm,
+        generate_picture_images=use_vlm,
+        enable_remote_services=use_vlm,
     )
 
-    if arm == "improved":
+    if use_vlm:
         api_key = os.environ.get("OPENROUTER_API_KEY", "")
         pdf_opts.picture_description_options = PictureDescriptionApiOptions(
             url="https://openrouter.ai/api/v1/chat/completions",
@@ -56,7 +59,7 @@ def parse_document(
     arm: str,
     out_dir: Path | str | None = None,
 ) -> tuple[Path, Path]:
-    """Parse a document through the baseline or improved arm.
+    """Parse a document through the baseline, ocr, or ocr_vlm arm.
 
     Returns (md_path, meta_path) paths to the output files.
     """
@@ -88,8 +91,8 @@ def parse_document(
         "image_count": len(doc.pictures),
     }
 
-    # Improved arm: include picture descriptions
-    if arm == "improved":
+    # ocr_vlm arm: include picture descriptions
+    if arm == "ocr_vlm":
         descriptions = []
         for pic in doc.pictures:
             if pic.meta and pic.meta.description:

@@ -13,10 +13,10 @@ uv sync
 ## Run
 
 ```bash
-# Step 1: Parse all documents (baseline + improved)
+# Step 1: Parse all documents (baseline, ocr, ocr_vlm)
 uv run python src/parse.py
 
-# Step 2: Extract signals from both parser outputs
+# Step 2: Extract signals from all parser outputs
 uv run python src/extract.py
 
 # Step 3: Evaluate against golden sample
@@ -28,8 +28,8 @@ uv run python src/evaluate.py
 - `documents/` - source PDFs and HTML
 - `golden/` - manually annotated golden samples
 - `results/` - parser output and extraction results (gitignored)
-- `src/parse.py` - baseline (PyMuPDF4LLM) vs improved (Docling)
-- `src/extract.py` - LangExtract signal extraction (same config both arms)
+- `src/parse.py` - baseline, ocr, and ocr_vlm arms via Docling
+- `src/extract.py` - LangExtract signal extraction (same config all arms)
 - `src/evaluate.py` - compare arms against golden sample
 - `docs/adr/` - decision records
 

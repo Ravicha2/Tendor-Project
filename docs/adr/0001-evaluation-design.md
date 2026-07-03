@@ -1,5 +1,7 @@
 # ADR 0001: Evaluation Design for Document Parsing Comparison
 
+> **Note**: Decisions 2 and 3 (arm configuration) have been superseded by [ADR 0002](0002-three-arm-evaluation.md), which expands from 2 arms to 3 (baseline, ocr, ocr_vlm).
+
 ## Status
 
 Accepted
@@ -20,15 +22,17 @@ Composite of three dimensions:
 
 Not just raw signal count, which can be inflated by loose extraction.
 
-### 2. Baseline arm: Docling standard pipeline, no vision
+### 2. Baseline arm: Docling standard pipeline, no OCR, no vision
 
-Docling `StandardPdfPipeline` with `do_ocr=False`, `PyPdfiumDocumentBackend`, `do_picture_description=False`. Keeps table structure extraction (TableFormer), HTML support, and section-aware parsing. Represents the best text-and-structure-only parser. Same engine as the improved arm, isolating vision capability as the only variable.
+Docling `StandardPdfPipeline` with `do_ocr=False`, `PyPdfiumDocumentBackend`, `do_picture_description=False`. Keeps table structure extraction (TableFormer), HTML support, and section-aware parsing. Represents the best text-and-structure-only parser. Same engine as the other arms, isolating OCR and VLM capabilities as variables.
 
 No local OCR (EasyOCR/Tesseract). No VLM. Text extraction from PDF text layer only.
 
+> **Superseded**: See [ADR 0002](0002-three-arm-evaluation.md) for the current 3-arm design (baseline, ocr, ocr_vlm).
+
 ### 3. Improved arm: Docling standard pipeline + VLM picture description via OpenRouter
 
-Same Docling `StandardPdfPipeline` with table structure, HTML, etc., plus `PictureDescriptionApiOptions` pointing to OpenRouter with `google/gemini-2.5-pro`. The VLM describes charts, maps, figures, and reads text from scanned/image pages. No local OCR dependency; the VLM handles both text-in-image and visual understanding.
+> **Superseded**: This arm has been replaced by `ocr` and `ocr_vlm` in [ADR 0002](0002-three-arm-evaluation.md). The `improved` arm (no OCR, VLM only) has been dropped; the new arms isolate OCR and VLM as independent variables.
 
 VLM prompt: domain-specific, procurement-aware. "Describe this image. Focus on any project names, budget figures, locations, procurement indicators, or council decisions visible."
 
@@ -84,9 +88,11 @@ Tendor_project/
 
 Each document produces two files in `results/<arm>/`:
 - `<doc_name>.md`: Markdown output from Docling's `export_to_markdown()`. Fed to LangExtract for signal extraction.
-- `<doc_name>_meta.json`: Metadata including parse time, page count, table count, image count, and VLM picture descriptions (improved arm only). Used for evaluation and tracing signal sources.
+- `<doc_name>_meta.json`: Metadata including parse time, page count, table count, image count, and VLM picture descriptions (ocr_vlm arm only). Used for evaluation and tracing signal sources.
 
-Both arms produce the same file structure. The only difference is the metadata JSON includes `picture_descriptions` in the improved arm.
+All three arms produce the same file structure. The only difference is the metadata JSON includes `picture_descriptions` in the `ocr_vlm` arm.
+
+> **Updated**: See [ADR 0002](0002-three-arm-evaluation.md) for the current arm definitions.
 
 - LangExtract schema mapping: can it handle budget_value (number), likely_supplier_categories (array), confidence_score (0-1 float)? Resolve during first extraction test.
 - OpenRouter config: API key, rate limits. Resolve during implementation.

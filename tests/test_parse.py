@@ -1,4 +1,4 @@
-"""Tests for parse_document: baseline and improved arms via Docling."""
+"""Tests for parse_document: baseline, ocr, and ocr_vlm arms via Docling."""
 
 import json
 from pathlib import Path
@@ -22,11 +22,20 @@ class TestParseDocument:
         assert meta_path.exists()
         assert md_path.suffix == ".md"
 
-    def test_improved_returns_md_and_meta(self, tmp_path):
-        """parse_document with arm='improved' produces .md and _meta.json."""
-        out_dir = tmp_path / "improved"
+    def test_ocr_returns_md_and_meta(self, tmp_path):
+        """parse_document with arm='ocr' produces .md and _meta.json."""
+        out_dir = tmp_path / "ocr"
         doc = DOCUMENTS / "01_easy_logan_transport.pdf"
-        md_path, meta_path = parse_document(doc, arm="improved", out_dir=out_dir)
+        md_path, meta_path = parse_document(doc, arm="ocr", out_dir=out_dir)
+
+        assert md_path.exists()
+        assert meta_path.exists()
+
+    def test_ocr_vlm_returns_md_and_meta(self, tmp_path):
+        """parse_document with arm='ocr_vlm' produces .md and _meta.json."""
+        out_dir = tmp_path / "ocr_vlm"
+        doc = DOCUMENTS / "01_easy_logan_transport.pdf"
+        md_path, meta_path = parse_document(doc, arm="ocr_vlm", out_dir=out_dir)
 
         assert md_path.exists()
         assert meta_path.exists()
@@ -52,11 +61,20 @@ class TestParseDocument:
 
         assert "picture_descriptions" not in meta
 
-    def test_improved_meta_has_picture_descriptions(self, tmp_path):
-        """Improved _meta.json MUST contain picture_descriptions key."""
-        out_dir = tmp_path / "improved"
+    def test_ocr_meta_has_no_picture_descriptions(self, tmp_path):
+        """OCR _meta.json must NOT contain picture_descriptions key."""
+        out_dir = tmp_path / "ocr"
         doc = DOCUMENTS / "01_easy_logan_transport.pdf"
-        _, meta_path = parse_document(doc, arm="improved", out_dir=out_dir)
+        _, meta_path = parse_document(doc, arm="ocr", out_dir=out_dir)
+        meta = json.loads(meta_path.read_text())
+
+        assert "picture_descriptions" not in meta
+
+    def test_ocr_vlm_meta_has_picture_descriptions(self, tmp_path):
+        """OCR+VLM _meta.json MUST contain picture_descriptions key."""
+        out_dir = tmp_path / "ocr_vlm"
+        doc = DOCUMENTS / "01_easy_logan_transport.pdf"
+        _, meta_path = parse_document(doc, arm="ocr_vlm", out_dir=out_dir)
         meta = json.loads(meta_path.read_text())
 
         assert "picture_descriptions" in meta
@@ -70,7 +88,7 @@ class TestParseDocument:
     def test_html_parses_with_html_backend(self, tmp_path):
         """HTML document parses successfully via HTML backend in both arms."""
         doc = DOCUMENTS / "04_edge_cityofsydney_agenda.html"
-        for arm in ("baseline", "improved"):
+        for arm in ("baseline", "ocr", "ocr_vlm"):
             out_dir = tmp_path / arm
             md_path, meta_path = parse_document(doc, arm=arm, out_dir=out_dir)
             assert md_path.exists(), f"{arm} arm failed for HTML"

@@ -1,4 +1,4 @@
-"""Signal extraction using LangExtract on both parser arms."""
+"""Signal extraction using LangExtract on all parser arms."""
 
 from __future__ import annotations
 
@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+from src.parse import VALID_ARMS
 from langextract.data import ExampleData, Extraction
 from langextract.extraction import extract
 from langextract.factory import ModelConfig
@@ -71,12 +73,13 @@ EXAMPLES = [
 # Attributes that come from LangExtract extraction_class/extraction_text mapping
 MAPPED_FROM_EXTRACTION = {"signal_type", "evidence_excerpt"}
 
-# All 12 expected field names
+# All 14 expected field names
 ALL_FIELDS = {
     "signal_type", "project_name", "asset_or_location", "category",
     "budget_value", "budget_value_basis", "opportunity_stage",
     "tender_pathway", "likely_supplier_categories", "confidence_score",
     "evidence_excerpt", "needs_human_review",
+    "grounding_start", "grounding_end",
 }
 
 
@@ -113,8 +116,15 @@ def load_config() -> ModelConfig:
     )
 
 
+def _coerce_int_or_none(val: int | float | str | None) -> int | None:
+    """Coerce a grounding offset to int or None."""
+    if val is None:
+        return None
+    return int(val)
+
+
 def coerce_signal(raw: dict) -> dict:
-    """Coerce raw extraction attributes to correct types for the 12-field schema."""
+    """Coerce raw extraction attributes to correct types for the 14-field schema."""
     # Map extraction_class → signal_type, extraction_text → evidence_excerpt
     result = {
         "signal_type": raw.get("signal_type", ""),
@@ -128,6 +138,10 @@ def coerce_signal(raw: dict) -> dict:
     for key in ("project_name", "asset_or_location", "category",
                 "budget_value_basis", "opportunity_stage", "tender_pathway"):
         result[key] = raw.get(key)
+
+    # Grounding offsets from char_interval
+    result["grounding_start"] = _coerce_int_or_none(raw.get("grounding_start"))
+    result["grounding_end"] = _coerce_int_or_none(raw.get("grounding_end"))
 
     # budget_value → number or None
     bv = raw.get("budget_value")
@@ -182,6 +196,8 @@ def _extraction_to_signal(ext: Extraction) -> dict | None:
     raw = {
         "signal_type": ext.extraction_class,
         "evidence_excerpt": ext.extraction_text,
+        "grounding_start": ext.char_interval.start_pos if ext.char_interval else None,
+        "grounding_end": ext.char_interval.end_pos if ext.char_interval else None,
     }
     # Merge attributes
     if ext.attributes:
@@ -201,15 +217,15 @@ def extract_signals(
     """Run LangExtract signal extraction on a parsed markdown document.
 
     Args:
-        arm: "baseline" or "improved"
+        arm: one of "baseline", "ocr", or "ocr_vlm"
         doc_name: Document name stem (e.g. "01_easy_logan_transport")
         results_dir: Override results directory. Defaults to ./results/
 
     Returns:
         Path to the _signals.json output file.
     """
-    if arm not in ("baseline", "improved"):
-        raise ValueError(f"arm must be 'baseline' or 'improved', got '{arm}'")
+    if arm not in VALID_ARMS:
+        raise ValueError(f"arm must be one of {VALID_ARMS}, got '{arm}'")
 
     results_dir = Path(results_dir) if results_dir else Path("results")
     md_path = results_dir / arm / f"{doc_name}.md"

@@ -13,6 +13,7 @@ from src.extract import (
     SIGNAL_TYPES,
     OPPORTUNITY_STAGES,
 )
+from src.parse import VALID_ARMS
 
 RESULTS = Path(__file__).parent.parent / "results"
 
@@ -82,7 +83,7 @@ class TestCoerceSignal:
         for falsy in ("false", "False", "FALSE", False):
             assert coerce_signal({"signal_type": "capital_works_item", "needs_human_review": falsy})["needs_human_review"] is False
 
-    def test_all_12_fields_present(self):
+    def test_all_14_fields_present(self):
         raw = {
             "signal_type": "capital_works_item",
             "project_name": "Chambers Flat Road upgrade",
@@ -96,6 +97,8 @@ class TestCoerceSignal:
             "confidence_score": "0.78",
             "evidence_excerpt": "Council allocated $2.5 million for Chambers Flat Road.",
             "needs_human_review": "true",
+            "grounding_start": 42,
+            "grounding_end": 88,
         }
         result = coerce_signal(raw)
         expected_keys = {
@@ -103,8 +106,25 @@ class TestCoerceSignal:
             "budget_value", "budget_value_basis", "opportunity_stage",
             "tender_pathway", "likely_supplier_categories", "confidence_score",
             "evidence_excerpt", "needs_human_review",
+            "grounding_start", "grounding_end",
         }
         assert set(result.keys()) == expected_keys
+
+    def test_grounding_start_end_int(self):
+        raw = {
+            "signal_type": "capital_works_item",
+            "grounding_start": 42,
+            "grounding_end": 88,
+        }
+        result = coerce_signal(raw)
+        assert result["grounding_start"] == 42
+        assert result["grounding_end"] == 88
+
+    def test_grounding_none_when_missing(self):
+        raw = {"signal_type": "capital_works_item"}
+        result = coerce_signal(raw)
+        assert result["grounding_start"] is None
+        assert result["grounding_end"] is None
 
     def test_signal_type_must_be_valid(self):
         raw = {"signal_type": "invalid_type"}
@@ -149,6 +169,17 @@ class TestExtractSignalsIntegration:
         if not key:
             pytest.skip("OPENROUTER_API_KEY not set")
 
+    def test_invalid_arm_raises_valueerror(self):
+        """Passing 'improved' (old arm name) or other invalid values raises ValueError."""
+        with pytest.raises(ValueError, match="arm"):
+            extract_signals("improved", "01_easy_logan_transport")
+        with pytest.raises(ValueError, match="arm"):
+            extract_signals("nonsense", "01_easy_logan_transport")
+
+    def test_valid_arms_accepted(self):
+        """VALID_ARMS contains baseline, ocr, ocr_vlm."""
+        assert VALID_ARMS == ("baseline", "ocr", "ocr_vlm")
+
     def test_baseline_easy_doc(self, has_api_key, tmp_path):
         """extract_signals on baseline arm for easy doc produces valid _signals.json."""
         # Copy the parsed markdown to tmp_path so we don't pollute results/
@@ -173,17 +204,32 @@ class TestExtractSignalsIntegration:
             assert 0.0 <= s["confidence_score"] <= 1.0
             assert isinstance(s["likely_supplier_categories"], list)
 
-    def test_improved_easy_doc(self, has_api_key, tmp_path):
-        """extract_signals on improved arm for easy doc produces valid _signals.json."""
-        src_md = RESULTS / "improved" / "01_easy_logan_transport.md"
+    def test_ocr_easy_doc(self, has_api_key, tmp_path):
+        """extract_signals on ocr arm for easy doc produces valid _signals.json."""
+        src_md = RESULTS / "ocr" / "01_easy_logan_transport.md"
         if not src_md.exists():
             pytest.skip("Parsed markdown not found, run parse first")
 
-        arm_dir = tmp_path / "improved"
+        arm_dir = tmp_path / "ocr"
         arm_dir.mkdir()
         (arm_dir / "01_easy_logan_transport.md").write_text(src_md.read_text())
 
-        signals_path = extract_signals("improved", "01_easy_logan_transport", results_dir=tmp_path)
+        signals_path = extract_signals("ocr", "01_easy_logan_transport", results_dir=tmp_path)
+        assert signals_path.exists()
+        signals = json.loads(signals_path.read_text())
+        assert isinstance(signals, list)
+
+    def test_ocr_vlm_easy_doc(self, has_api_key, tmp_path):
+        """extract_signals on ocr_vlm arm for easy doc produces valid _signals.json."""
+        src_md = RESULTS / "ocr_vlm" / "01_easy_logan_transport.md"
+        if not src_md.exists():
+            pytest.skip("Parsed markdown not found, run parse first")
+
+        arm_dir = tmp_path / "ocr_vlm"
+        arm_dir.mkdir()
+        (arm_dir / "01_easy_logan_transport.md").write_text(src_md.read_text())
+
+        signals_path = extract_signals("ocr_vlm", "01_easy_logan_transport", results_dir=tmp_path)
         assert signals_path.exists()
         signals = json.loads(signals_path.read_text())
         assert isinstance(signals, list)
