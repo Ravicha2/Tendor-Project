@@ -13,7 +13,6 @@ from src.extract import (
     SIGNAL_TYPES,
     OPPORTUNITY_STAGES,
 )
-from src.parse import VALID_ARMS
 
 RESULTS = Path(__file__).parent.parent / "results"
 
@@ -177,8 +176,16 @@ class TestExtractSignalsIntegration:
             extract_signals("nonsense", "01_easy_logan_transport")
 
     def test_valid_arms_accepted(self):
-        """VALID_ARMS contains baseline, ocr, ocr_vlm."""
-        assert VALID_ARMS == ("baseline", "ocr", "ocr_vlm")
+        """extract_signals accepts baseline, ocr, and ocr_vlm arm names."""
+        for arm in ("baseline", "ocr", "ocr_vlm"):
+            # Won't raise ValueError for valid arm (may raise FileNotFoundError
+            # if no parsed md exists, which is fine for this validation test)
+            try:
+                extract_signals(arm, "nonexistent_doc", results_dir="/tmp")
+            except ValueError:
+                pytest.fail(f"extract_signals rejected valid arm '{arm}'")
+            except FileNotFoundError:
+                pass  # Expected when doc doesn't exist
 
     def test_baseline_easy_doc(self, has_api_key, tmp_path):
         """extract_signals on baseline arm for easy doc produces valid _signals.json."""

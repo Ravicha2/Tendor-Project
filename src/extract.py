@@ -8,8 +8,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
-
-from src.parse import VALID_ARMS
 from langextract.data import ExampleData, Extraction
 from langextract.extraction import extract
 from langextract.factory import ModelConfig
@@ -224,8 +222,8 @@ def extract_signals(
     Returns:
         Path to the _signals.json output file.
     """
-    if arm not in VALID_ARMS:
-        raise ValueError(f"arm must be one of {VALID_ARMS}, got '{arm}'")
+    if arm not in ("baseline", "ocr", "ocr_vlm"):
+        raise ValueError(f"arm must be 'baseline', 'ocr', or 'ocr_vlm', got '{arm}'")
 
     results_dir = Path(results_dir) if results_dir else Path("results")
     md_path = results_dir / arm / f"{doc_name}.md"
