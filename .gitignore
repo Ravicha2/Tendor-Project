@@ -1,0 +1,8 @@
+results/
+.env
+*.pyc
+__pycache__/
+.DS_Store
+*.egg-info/
+.venv/
+take_home*

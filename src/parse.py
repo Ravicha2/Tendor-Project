@@ -1,0 +1,1 @@
+"""Parser harness: baseline (PyMuPDF4LLM) vs improved (Docling)."""

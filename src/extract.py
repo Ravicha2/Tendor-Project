@@ -1,0 +1,1 @@
+"""Signal extraction using LangExtract. Same config for both parser arms."""
