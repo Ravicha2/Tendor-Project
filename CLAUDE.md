@@ -1,0 +1,3 @@
+- `uv` used for package management
+- always follow `/test-driven-development`
+- ask user if unsure of anything, do not overengineer
