@@ -46,24 +46,21 @@ Google's langextract library for structured extraction with source grounding. So
 
 Schema mapping: `signal_type` to LangExtract's `extraction_class`, `evidence_excerpt` to `extraction_text`, remaining 10 fields to `attributes`. Type coercion (numbers, arrays, floats) handled in post-processing.
 
-### 5. Golden sample: manual annotation on easy + medium docs
+### 5. Validation: stratified sampled signal review
 
-Two-pass approach: read documents manually first to build oracle ground truth, then compare both parser outputs against it. Easy doc (~10 pages, ~5-10 signals) and medium doc (~31 pages, ~10-20 signals).
+No golden dataset. Annotating procurement signals from council documents requires domain expertise in tendering that the author does not have. Without that expertise, manual annotation produces unreliable ground truth: under-counting real signals (not knowing what counts) and over-counting marginal ones (not knowing what does not).
 
-Hard doc (115 pages): spot-check 3 signal-rich sections + structural comparison (table preservation stats, text recovery stats). No full golden sample.
-
-HTML doc (39 KB): structural comparison + qualitative notes only.
+Instead, a stratified random sample of ~30 signals (roughly 1 per confidence tier per document per arm, where available) is manually reviewed. Each signal is judged as **actionable** (a real procurement opportunity a supplier could act on) or **noise** (too vague, not procurement-related, or a duplicate). Precision is the fraction of actionable signals in the sample.
 
 ### 6. Evaluation scope
 
-- **Easy + Medium**: Full golden sample (recall, field accuracy, table recovery)
-- **Hard**: Spot-check 3 sections + structural comparison
-- **HTML**: Structural comparison + qualitative notes
-- **All docs**: Parsing time per page (cost/latency data)
+- **All docs**: Raw signal counts, confidence score distributions, structural comparison (table/text preservation), parse latency, token cost
+- **All docs**: Sampled precision (stratified random sample, actionable vs noise)
+- **Doc 05 (image-heavy)**: Deep-dive on VLM-specific signals, deduplication, and misattribution analysis
 
 ### 7. Negative findings required
 
-The brief asks for honest assessment of where the improved parser does NOT help or costs too much. Explicitly report: cases where baseline matches or beats improved parser, latency cost, and production trade-offs.
+The brief asks for honest assessment of where the improved parser does NOT help or costs too much. Explicitly report: cases where baseline matches or beats improved parser, latency cost, and production trade-offs. Report misattributed signals (VLM reads text correctly but misinterprets context) and signal count inflation from duplicates.
 
 ### 8. Project structure
 
@@ -72,7 +69,6 @@ Flat layout, uv for package management:
 ```ini
 Tendor_project/
 ├── documents/           # Source docs
-├── golden/             # Manually annotated golden samples (JSON)
 ├── src/
 │   ├── parse.py        # Parser harness: baseline + improved
 │   ├── extract.py      # LangExtract extraction with signal schema
