@@ -37,7 +37,6 @@ Document 5 was added beyond the provided set because it has 27 images (engineeri
 ### Metrics
 
 - __Field accuracy__: for matching signals, correctness of `budget_value`, `asset_or_location`, `category`.
-- **Table-specific recovery**: signals whose evidence lives in table content.
 - **Parse latency**: time per document per arm.
 - __Token cost__: VLM tokens (ocr_vlm arm) and extraction tokens (all arms).
 
@@ -240,13 +239,6 @@ For 4 of 5 documents (text-dominant PDFs and HTML), VLM produced equal or slight
 4. **OCR alone is not worth the latency for text-layer PDFs.** Documents 01-04 are text-layer PDFs where OCR adds no new content (the text layer already contains all text). OCR only matters for scanned/image-only pages. Consider enabling OCR only when page text is empty or below a threshold.
 5. **Filter out noise images.** The VLM described signatures, CAPTCHAs, and low-resolution thumbnails as containing "no procurement information." These descriptions add ~5 KB of noise per document with zero signal gain. Pre-filter images by size and resolution before sending to VLM.
 6. __Parser quality does not fix extraction gaps.__ No arm recovered any `budget_value` from document 02 (the budget document). All 28/25/24 signals had `budget_value: null`. Table structure was preserved identically across arms (48 tables detected in all), but the extraction model still failed to pull dollar figures. This is an extraction-layer problem, not a parser-layer problem.
-
-### What to do next
-
-1. __Complete the golden dataset__ for precision/recall/F1 measurement. Raw signal counts are a rough proxy; field-level accuracy (correct budget_value, correct project-to-dollar alignment) is where parser quality matters most for budget documents like doc 02.
-2. **Test VLM on truly scanned documents** (image-only PDFs with no text layer). The current test set is mostly text-layer PDFs. The brief's concern about "empty text from scanned pages" is valid but not tested here.
-3. **Benchmark a cheaper/faster VLM model** (gemini-2.5-flash or similar) for picture description to quantify the quality-vs-latency trade-off.
-4. **Implement image pre-filtering** to skip VLM on images below a resolution or content-relevance threshold.
 
 ---
 

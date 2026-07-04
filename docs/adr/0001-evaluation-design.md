@@ -16,11 +16,11 @@ Tendor needs evidence on whether a better document-parsing layer measurably impr
 
 Composite of three dimensions:
 
-- **Recall gain**: count of valid signals found by improved parser that baseline missed (confirmed against manual golden sample)
-- **Field accuracy**: for signals both parsers find, correctness of budget_value, asset_or_location, and category
-- **Table-specific recovery**: signals that exist only in table content, which baseline mangles
+- **Signal count**: raw signals extracted per arm per document, with confidence-tier breakdown
+- **Sampled precision**: stratified random sample of ~30 signals (1 per confidence tier per document per arm), each judged actionable or noise. Precision is fraction of actionable signals in the sample.
+- **Field accuracy**: for matching signals across arms, correctness of budget_value, asset_or_location, and category
 
-Not just raw signal count, which can be inflated by loose extraction.
+No golden dataset. Annotating procurement signals requires domain expertise the author lacks. Sampled precision is a pragmatic substitute: it measures whether extracted signals are real procurement opportunities without requiring exhaustive ground truth.
 
 ### 2. Baseline arm: Docling standard pipeline, no OCR, no vision
 
