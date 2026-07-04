@@ -51,9 +51,9 @@ Rather than attempt full golden-set annotation, a stratified random sample of 30
 |---|---|---|---|---|
 | baseline | 3/3 (100%) | 4/5 (80%) | 0/4 (0%) | 7/12 (58%) |
 | ocr | 3/3 (100%) | 3/5 (60%) | 1/5 (40%) | 7/13 (53%) |
-| ocr_vlm | 3/3 (100%) | 3/4 (75%) | 0/4 (0%) | 6/11 (55%) |
+| ocr_vlm | 2/3 (67%) | 3/4 (75%) | 0/4 (0%) | 5/11 (45%) |
 
-Sampled from 36 signals across 5 documents (see Appendix B). Precision is consistent across arms (53-58%), with high-confidence signals reliably actionable (100%) and low-confidence signals almost entirely noise (0-40%). The parser configuration does not meaningfully affect precision.
+Sampled from 36 signals across 5 documents (see Appendix B). Precision is consistent across arms (45-58%), with high-confidence signals quite actionable (67-100%) and low-confidence signals almost entirely noise (0-40%). The parser configuration does not meaningfully affect precision.
 
 ---
 
@@ -334,6 +334,6 @@ Each signal below was sampled from the extraction results (1 per confidence tier
 | 31  | 03 Hard         | L    | 0.40 | Pedestrian Access Review                       | PETITION - REQUESTING COUNCIL REVIEW PEDESTRIAN ACCESS BETWEEN HARRIER STREET AND MILES PLATTING ROAD, ROCHEDALE             | N   |
 | 32  | 04 Edge         | H    | 0.95 | Parks and Street Greening Maintenance Services | Tender - T-2025-1686 - Parks and Street Greening Maintenance Services                                                        | A   |
 | 33  | 04 Edge         | L    | 0.30 | Delivery Program 2025-2029                     | 2025/26 Quarter 2 Review - Delivery Program 2025-2029                                                                        | N   |
-| 34  | 05 Rickard Road | H    | 0.85 | Proposed Stage 1 Development                   | Proposed Stage 1 Development at Ingleburn Road, Leppington NSW 2179                                                          | A   |
+| 34  | 05 Rickard Road | H    | 0.85 | Proposed Stage 1 Development                   | Proposed Stage 1 Development at Ingleburn Road, Leppington NSW 2179                                                          | N   |
 | 35  | 05 Rickard Road | M    | 0.65 | Trunk Drainage Infrastructure Works            | Developer Works for trunk drainage infrastructure                                                                            | A   |
 | 36  | 05 Rickard Road | L    | 0.50 | 96 Rickard Road Planning Agreement             | 96 Rickard Road Planning Agreement                                                                                           | N   |
