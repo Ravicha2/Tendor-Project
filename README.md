@@ -13,14 +13,18 @@ uv sync
 ## Run
 
 ```bash
-# Step 1: Parse all documents (baseline, ocr, ocr_vlm)
+# Full pipeline (parse + extract, all arms)
+uv run python run_pipeline.py
+
+# Or individual steps:
 uv run python src/parse.py
-
-# Step 2: Extract signals from all parser outputs
 uv run python src/extract.py
-
-# Step 3: Evaluate against golden sample
 uv run python src/evaluate.py
+
+# Pipeline options:
+uv run python run_pipeline.py --arms baseline ocr    # specific arms only
+uv run python run_pipeline.py --skip-parse            # extract only
+uv run python run_pipeline.py --skip-extract          # parse only
 ```
 
 ## Project structure

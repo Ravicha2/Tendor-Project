@@ -1,4 +1,4 @@
-"""Token-usage capture via monkey-patch of the OpenAI chat completions endpoint."""
+"""Token-usage capture for both OpenAI SDK calls and Docling VLM API calls."""
 
 from __future__ import annotations
 
@@ -28,8 +28,6 @@ class TokenUsage:
         self.api_calls += other.api_calls
 
 
-# Shared instance with lock, so ThreadPoolExecutor workers in LangExtract
-# all accumulate into the same counter.
 _usage_lock = threading.Lock()
 _usage = TokenUsage()
 
@@ -44,39 +42,73 @@ def get_usage() -> TokenUsage:
     return _usage
 
 
-# --- Monkey-patch -----------------------------------------------------------
+def _accumulate_from_response(response_payload: dict | None) -> None:
+    """Extract token usage from an OpenAI-compatible API response and add to _usage."""
+    if not response_payload:
+        return
+    usage = response_payload.get("usage")
+    if not usage:
+        return
+    with _usage_lock:
+        _usage.prompt_tokens += usage.get("prompt_tokens", 0) or 0
+        _usage.completion_tokens += usage.get("completion_tokens", 0) or 0
+        _usage.total_tokens += usage.get("total_tokens", 0) or 0
+        _usage.api_calls += 1
 
-_original_create: object = None  # ponytail: set lazily to avoid import-time side effects
+
+# --- Monkey-patches -----------------------------------------------------------
+
+_original_create: object = None  # ponytail: lazy to avoid import-time side effects
+_original_api_image_request: object = None
 
 
 def install_token_capture() -> None:
-    """Patch openai.resources.chat.completions.Completions.create to capture usage."""
-    global _original_create
-    if _original_create is not None:
-        return  # already patched
+    """Patch OpenAI SDK and Docling VLM to capture token usage."""
+    global _original_create, _original_api_image_request
 
-    from openai.resources.chat.completions import Completions
+    # Patch OpenAI SDK
+    if _original_create is None:
+        from openai.resources.chat.completions import Completions
 
-    _original_create = Completions.create
+        _original_create = Completions.create
 
-    def _patched_create(self, *args, **kwargs):
-        response = _original_create(self, *args, **kwargs)
-        if hasattr(response, "usage") and response.usage is not None:
-            with _usage_lock:
-                _usage.prompt_tokens += getattr(response.usage, "prompt_tokens", 0) or 0
-                _usage.completion_tokens += getattr(response.usage, "completion_tokens", 0) or 0
-                _usage.total_tokens += getattr(response.usage, "total_tokens", 0) or 0
-                _usage.api_calls += 1
-        return response
+        def _patched_create(self, *args, **kwargs):
+            response = _original_create(self, *args, **kwargs)
+            if hasattr(response, "usage") and response.usage is not None:
+                with _usage_lock:
+                    _usage.prompt_tokens += getattr(response.usage, "prompt_tokens", 0) or 0
+                    _usage.completion_tokens += getattr(response.usage, "completion_tokens", 0) or 0
+                    _usage.total_tokens += getattr(response.usage, "total_tokens", 0) or 0
+                    _usage.api_calls += 1
+            return response
 
-    Completions.create = _patched_create
+        Completions.create = _patched_create
+
+    # Patch Docling's api_image_request (uses requests.post, not OpenAI SDK)
+    if _original_api_image_request is None:
+        from docling.utils.api_image_request import api_image_request as _orig
+
+        _original_api_image_request = _orig
+
+        def _patched_api_image_request(*args, **kwargs):
+            result = _original_api_image_request(*args, **kwargs)
+            # Result has .usage which is the raw usage dict from the API response
+            if hasattr(result, "usage") and result.usage:
+                _accumulate_from_response({"usage": result.usage})
+            return result
+
+        import docling.utils.api_image_request as _mod
+        _mod.api_image_request = _patched_api_image_request
 
 
 def uninstall_token_capture() -> None:
-    """Restore the original create method."""
-    global _original_create
-    if _original_create is None:
-        return
-    from openai.resources.chat.completions import Completions
-    Completions.create = _original_create
-    _original_create = None
+    """Restore original functions."""
+    global _original_create, _original_api_image_request
+    if _original_create is not None:
+        from openai.resources.chat.completions import Completions
+        Completions.create = _original_create
+        _original_create = None
+    if _original_api_image_request is not None:
+        import docling.utils.api_image_request as _mod
+        _mod.api_image_request = _original_api_image_request
+        _original_api_image_request = None

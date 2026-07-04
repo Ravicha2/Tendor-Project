@@ -10,6 +10,8 @@ from docling.datamodel.pipeline_options import PdfPipelineOptions, PictureDescri
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 from docling.document_converter import DocumentConverter, PdfFormatOption, HTMLFormatOption
 
+from src.metrics import install_token_capture, uninstall_token_capture, reset_usage, get_usage
+
 PROCUREMENT_PROMPT = (
     "Describe this image. Focus on any project names, budget figures, "
     "locations, procurement indicators, or council decisions visible."
@@ -68,9 +70,20 @@ def parse_document(
         raise ValueError(f"arm must be one of {VALID_ARMS}, got '{arm}'")
 
     converter = _build_converter(arm)
+
+    # Capture VLM token usage (only meaningful for ocr_vlm arm)
+    if arm == "ocr_vlm":
+        install_token_capture()
+        reset_usage()
+
     start = time.monotonic()
-    result = converter.convert(path)
-    parse_time = time.monotonic() - start
+    try:
+        result = converter.convert(path)
+    finally:
+        parse_time = time.monotonic() - start
+        vlm_usage = get_usage().to_dict() if arm == "ocr_vlm" else None
+        if arm == "ocr_vlm":
+            uninstall_token_capture()
 
     doc_name = path.stem
     arm_dir = Path(out_dir) if out_dir else Path("results") / arm
@@ -90,6 +103,8 @@ def parse_document(
         "table_count": len(doc.tables),
         "image_count": len(doc.pictures),
     }
+    if vlm_usage is not None:
+        meta["vlm_token_usage"] = vlm_usage
 
     # ocr_vlm arm: include picture descriptions
     if arm == "ocr_vlm":

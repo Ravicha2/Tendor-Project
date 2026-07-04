@@ -52,6 +52,15 @@ class TestParseDocument:
         assert isinstance(meta["table_count"], int)
         assert isinstance(meta["image_count"], int)
 
+    def test_baseline_meta_has_no_vlm_token_usage(self, tmp_path):
+        """Baseline _meta.json must NOT contain vlm_token_usage key."""
+        out_dir = tmp_path / "baseline"
+        doc = DOCUMENTS / "01_easy_logan_transport.pdf"
+        _, meta_path = parse_document(doc, arm="baseline", out_dir=out_dir)
+        meta = json.loads(meta_path.read_text())
+
+        assert "vlm_token_usage" not in meta
+
     def test_baseline_meta_has_no_picture_descriptions(self, tmp_path):
         """Baseline _meta.json must NOT contain picture_descriptions key."""
         out_dir = tmp_path / "baseline"
@@ -71,13 +80,14 @@ class TestParseDocument:
         assert "picture_descriptions" not in meta
 
     def test_ocr_vlm_meta_has_picture_descriptions(self, tmp_path):
-        """OCR+VLM _meta.json MUST contain picture_descriptions key."""
+        """OCR+VLM _meta.json MUST contain picture_descriptions and vlm_token_usage keys."""
         out_dir = tmp_path / "ocr_vlm"
         doc = DOCUMENTS / "01_easy_logan_transport.pdf"
         _, meta_path = parse_document(doc, arm="ocr_vlm", out_dir=out_dir)
         meta = json.loads(meta_path.read_text())
 
         assert "picture_descriptions" in meta
+        assert "vlm_token_usage" in meta
 
     def test_invalid_arm_raises(self):
         """Invalid arm value raises ValueError."""

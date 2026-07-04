@@ -1,5 +1,6 @@
 """Tests for metrics module."""
 
+from dataclasses import dataclass
 from unittest.mock import MagicMock
 
 from src.metrics import TokenUsage, get_usage, reset_usage, install_token_capture, uninstall_token_capture
@@ -84,6 +85,39 @@ def test_shared_usage_across_threads():
     assert u.prompt_tokens == 10
     assert u.completion_tokens == 5
     assert u.api_calls == 1
+
+
+def test_docling_api_image_request_patch(monkeypatch):
+    """Patching docling api_image_request captures usage from result.usage."""
+    reset_usage()
+    uninstall_token_capture()
+
+    from docling.datamodel.base_models import ApiImageRequestResult, VlmStopReason
+
+    fake_result = ApiImageRequestResult(
+        text="a logo",
+        num_tokens=88,
+        stop_reason=VlmStopReason.END_OF_SEQUENCE,
+        usage={"prompt_tokens": 60, "completion_tokens": 28, "total_tokens": 88},
+    )
+
+    real_api_image_request = MagicMock(return_value=fake_result)
+    monkeypatch.setattr(
+        "docling.utils.api_image_request.api_image_request", real_api_image_request
+    )
+
+    install_token_capture()
+
+    import docling.utils.api_image_request as _mod
+    _mod.api_image_request(image=None, prompt="test", url="https://example.com")
+
+    u = get_usage()
+    assert u.prompt_tokens == 60
+    assert u.completion_tokens == 28
+    assert u.total_tokens == 88
+    assert u.api_calls == 1
+
+    uninstall_token_capture()
 
 
 if __name__ == "__main__":
