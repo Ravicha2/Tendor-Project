@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +12,8 @@ from dotenv import load_dotenv
 from langextract.data import ExampleData, Extraction
 from langextract.extraction import extract
 from langextract.factory import ModelConfig
+
+from src.metrics import install_token_capture, uninstall_token_capture, reset_usage, get_usage
 
 load_dotenv()
 
@@ -237,19 +240,28 @@ def extract_signals(
 
     config = load_config()
 
+    install_token_capture()
+    reset_usage()
+    start = time.monotonic()
+
     # ponytail: max_char_buffer=2000 for longer docs to keep chunks meaningful
     # extraction_passes=2 for better recall on sparse long docs
-    result = extract(
-        text_or_documents=text,
-        prompt_description=PROMPT_DESCRIPTION,
-        examples=EXAMPLES,
-        config=config,
-        max_char_buffer=2000,
-        temperature=0.0,
-        extraction_passes=2,
-        show_progress=True,
-        fetch_urls=False,
-    )
+    try:
+        result = extract(
+            text_or_documents=text,
+            prompt_description=PROMPT_DESCRIPTION,
+            examples=EXAMPLES,
+            config=config,
+            max_char_buffer=2000,
+            temperature=0.0,
+            extraction_passes=2,
+            show_progress=True,
+            fetch_urls=False,
+        )
+    finally:
+        extract_time = time.monotonic() - start
+        token_usage = get_usage().to_dict()
+        uninstall_token_capture()
 
     # result is AnnotatedDocument when input is str
     signals = []
@@ -260,6 +272,17 @@ def extract_signals(
 
     out_path = results_dir / arm / f"{doc_name}_signals.json"
     out_path.write_text(json.dumps(signals, indent=2, ensure_ascii=False))
+
+    # Write extraction metrics alongside signals
+    meta_path = results_dir / arm / f"{doc_name}_signals_meta.json"
+    meta_path.write_text(json.dumps({
+        "extract_time_seconds": round(extract_time, 2),
+        "token_usage": token_usage,
+        "signal_count": len(signals),
+        "arm": arm,
+        "doc_name": doc_name,
+    }, indent=2))
+
     return out_path
 
 
