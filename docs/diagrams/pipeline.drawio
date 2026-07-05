@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="Page-1">
+    <mxGraphModel dx="1434" dy="780" grid="10" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Tendor POC: Document Parsing Evaluation Pipeline" style="text;html=1;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="520" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Input Documents Container -->
+        <mxCell id="docs_container" value="Input Documents" style="swimlane;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="200" height="320" as="geometry" />
+        </mxCell>
+
+        <mxCell id="doc1" value="01 Easy&#xa;(Logan Transport)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="docs_container">
+          <mxGeometry x="20" y="50" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="doc2" value="02 Medium&#xa;(Logan Budget)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="docs_container">
+          <mxGeometry x="20" y="100" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="doc3" value="03 Hard&#xa;(Brisbane Minutes)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="docs_container">
+          <mxGeometry x="20" y="150" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="doc4" value="04 Edge&#xa;(City of Sydney HTML)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="docs_container">
+          <mxGeometry x="20" y="200" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="doc5" value="05 Image-heavy&#xa;(Rickard Road)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="docs_container">
+          <mxGeometry x="20" y="250" width="160" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Parse Container -->
+        <mxCell id="parse_container" value="Parse (Docling)" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="80" width="260" height="320" as="geometry" />
+        </mxCell>
+
+        <mxCell id="baseline" value="baseline&#xa;do_ocr=False&#xa;do_picture_description=False" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="parse_container">
+          <mxGeometry x="30" y="50" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ocr" value="ocr&#xa;do_ocr=True&#xa;do_picture_description=False" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="parse_container">
+          <mxGeometry x="30" y="130" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ocr_vlm" value="ocr_vlm&#xa;do_ocr=True&#xa;do_picture_description=True" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="parse_container">
+          <mxGeometry x="30" y="210" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows: Docs -> Parse arms (grouped) -->
+        <mxCell id="e_docs_baseline" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="docs_container" target="baseline">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_docs_ocr" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="docs_container" target="ocr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_docs_ocr_vlm" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="docs_container" target="ocr_vlm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Extract Container -->
+        <mxCell id="extract_container" value="Extract (LangExtract)" style="swimlane;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="620" y="80" width="200" height="320" as="geometry" />
+        </mxCell>
+
+        <mxCell id="extract_detail" value="gemini-3.1-flash-lite&#xa;(OpenRouter)&#xa;temperature=0&#xa;Same config all arms" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="extract_container">
+          <mxGeometry x="20" y="50" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="extract_output" value="Output:&#xa;signals.json&#xa;+ markdown&#xa;+ meta.json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="extract_container">
+          <mxGeometry x="20" y="180" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows: Parse -> Extract -->
+        <mxCell id="e_baseline_extract" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="baseline" target="extract_detail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ocr_extract" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ocr" target="extract_detail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ocr_vlm_extract" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ocr_vlm" target="extract_detail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: Extract detail -> Extract output -->
+        <mxCell id="e_extract_internal" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="extract_container" source="extract_detail" target="extract_output">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Evaluate -->
+        <mxCell id="evaluate" value="Evaluate&#xa;Signal counts&#xa;Sampled precision&#xa;Parse latency&#xa;Token cost" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="870" y="180" width="160" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: Extract -> Evaluate -->
+        <mxCell id="e_extract_evaluate" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="extract_container" target="evaluate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend" value="Legend" style="swimlane;startSize=25;fillColor=none;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="870" y="80" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_held_constant" value="Held constant&#xa;across arms" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="legend">
+          <mxGeometry x="10" y="35" width="65" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_variable" value="Variable&#xa;(tested)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="legend">
+          <mxGeometry x="85" y="35" width="65" height="35" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
