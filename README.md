@@ -2,6 +2,10 @@
 
 Does a better document-parsing layer measurably improve procurement signal extraction?
 
+## Pipeline Overview
+
+![alt text](docs/diagrams/pipeline.png)
+
 ## Setup
 
 Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/).
